@@ -1,3 +1,6 @@
+build
+build_tool/*
+
 # Prerequisites
 *.d
 

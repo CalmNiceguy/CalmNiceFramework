@@ -1,0 +1,541 @@
+5/30/23
+
+what first few tasks would you recommend for starting a new project that wraps dx12 leaving the option of implementing vulkan later. other goals for the project include breaking it down into steps where every feature added is recorded and can easily be branched off from or come back to. Ideally the end result would allow the user to select which features they want from the framework and only include those. Ease of use is of very high importance to the end product
+ChatGPT
+Building a new graphics abstraction layer project, in your case wrapping DirectX 12 (DX12) and potentially Vulkan, is quite a large and complex task. Here's a general step-by-step guideline on how to go about it, starting with DX12 and leaving room for Vulkan implementation later.
+This guide assumes you have a strong understanding of graphics programming, the DX12 and Vulkan APIs, and the languages you will be using.
+Define the Goals and Scope of the Project: Clearly define what your project will and will not do. This includes defining what kind of features you want to support. For example, will you be supporting things like ray tracing, compute shaders, etc? This will help you avoid scope creep and make your project manageable.
+Research and Understand DX12 and Vulkan API Differences: Even before starting the implementation, understanding the differences and similarities between DX12 and Vulkan will help you to create a better abstraction that can eventually support both.
+Design the Architecture of the System: Design the overall architecture of your system before you start coding. This includes deciding on things like how you will handle memory management, synchronization, the render pipeline, etc.
+Prototype with DX12: Start with a basic prototype using DX12. This could be something as simple as rendering a triangle to the screen. The aim here is to test your basic architecture design and get a handle on DX12 if you are not already familiar.
+Incrementally Add Features: Start adding features to your system one by one, making sure to thoroughly test each one as you go. Each new feature should be added in a modular way that can be easily removed or added back. Each feature should also be recorded in version control, like Git, so that you can easily branch off or return to any previous state.
+Refactor and Clean Up the Code: As you add more features, it's likely your code will become messy. Regularly take time to refactor and clean up your code to make it more maintainable.
+Document Everything: Good documentation will make it easier for others (and future you) to understand how the system works and how to use it. This includes both comments in the code and external documentation.
+Create a User-Friendly API: Make sure your system is easy to use. This includes things like providing clear error messages, sensible defaults, and a consistent and intuitive API.
+Prepare for Vulkan Implementation: Once you're satisfied with your DX12 implementation, start preparing for the Vulkan implementation. This might involve refactoring your architecture to better support Vulkan.
+Implement Vulkan: Now that your system is solid and you're familiar with the process, you can start implementing Vulkan.
+Testing and Optimization: Finally, test your system thoroughly and optimize it where necessary. This includes things like performance testing, compatibility testing, and so on.
+Remember that a project of this scale will likely take a long time and be quite complex. It's important to be patient and persistent, and to take time to learn and understand each concept before moving on to the next. Good luck!
+
+
+
+Made repo and CMakeLists.txt. Set up this text file for work logging.
+Next I need to make the initial project which probably renders a triangle and is a dx12 wrapper.
+I think the wrapper with be extremely simple, let's ask chat gpt what a very simple graphics wrapper/api would be.
+
+
+for a c++ graphics engine api that wraps one or more of the lower level graphics apis. what are some of the main features for a first version that wants to make rendering triangles as simple as possible
+ChatGPT
+Creating a C++ graphics engine API that simplifies rendering triangles involves abstracting the complexity of lower-level APIs like Vulkan, DirectX, or OpenGL. Here are some main features to consider for a first version:
+Easy Triangle Creation: This is the core feature. The API should provide a simple way to define triangles in 3D space, perhaps by specifying just the vertex positions.
+Shader Management: Provide a system that allows the user to load, compile, and bind shaders with minimal effort. This might involve abstracting shader language differences across various platforms.
+Buffer Management: Provide easy-to-use methods for creating and managing vertex and index buffers.
+Mesh Management: Besides individual triangles, provide the ability to define and manipulate more complex geometric objects composed of triangles.
+Material and Texture Support: Even in a basic version, some level of texture support will be needed to color the triangles. This involves both texture loading and UV mapping.
+Camera System: Implement a simple camera system to allow the user to define the viewpoint and orientation in the 3D world.
+Simple Lighting Model: Implement a basic lighting model, such as Lambertian reflectance, so that the user can see depth cues on the triangles.
+Rendering Pipeline Configuration: Simplify the configuration of the rendering pipeline. The user should be able to specify what types of shaders to use, the order of shader stages, etc., with just a few lines of code.
+Cross-platform Compatibility: The API should be compatible with as many systems as possible. This might mean supporting multiple lower-level graphics APIs, such as DirectX for Windows and Vulkan or OpenGL for other platforms.
+Error Handling: Robust error handling and messaging that helps users quickly understand and resolve issues. This can be a major quality-of-life improvement over the often cryptic error messages produced by lower-level APIs.
+Documentation and Tutorials: Ensure clear documentation and tutorials that guide new users on how to use the API effectively.
+Performance: Even at an early stage, it's important to keep performance considerations in mind. Efficient use of memory, minimization of CPU-GPU data transfer, and so on, are all crucial for a graphics API.
+Remember that this is just a first version, and further developments will be needed. For example, in later versions, you might want to add more complex features like animation support, scene graph management, post-processing effects, advanced lighting models, and more. However, keeping things simple in the beginning will make the API more accessible to beginners and allow you to get user feedback quickly, which will guide further development.
+
+
+before starting, let's start designing the api. what is the best way to include this framework in another project that wants to use it?
+ChatGPT
+There are several ways to include a C++ framework in another project that wants to use it. The best approach can depend on several factors including the complexity of the framework, the build system being used, and the target platforms. Here are a few options:
+Source Code Inclusion: The simplest way to include a framework is to provide the source code files directly, which users can include into their own projects. This can work well for smaller frameworks, but it can be hard to manage for larger projects, and it also doesn't separate the framework development from the application development.
+Static Library: You can compile your framework into a static library (.lib in Windows, .a in Unix/Linux). Users then link this library into their application. This way, users don't need to see or manage the framework source code directly. However, the library must be compiled separately for each platform and compiler you want to support.
+Dynamic Library: Instead of a static library, you can compile your framework into a dynamic library (.dll in Windows, .so in Unix/Linux, .dylib in macOS). This library can be shared among multiple applications, and it allows the framework to be updated independently from the applications using it.
+Package Manager: If your framework becomes widely used, you might consider distributing it via a package manager like vcpkg, Conan, or Hunter. These tools make it easy for users to download and build your framework, along with any dependencies it has.
+Build System Integration: Regardless of how the code is included, it's important to provide easy integration with common build systems. This might involve providing CMake files, a Bazel BUILD file, or whatever is necessary for other popular build systems.
+Submodule/Subtree: If the project is hosted on a Git repository, Git submodules or subtrees can be used to include your framework in another project. This is a good way to keep the framework code separate while still allowing it to be included directly in a project.
+In addition to these methods, make sure to provide clear documentation on how to include and use your framework. This could involve a step-by-step guide, sample projects, or even video tutorials.
+Finally, remember to consider the target audience for your framework. If your users are likely to be less experienced, it might be best to prioritize ease of use, perhaps at the expense of some flexibility. Conversely, if your users are likely to be experienced developers, they may appreciate more control and flexibility, even if it means a slightly more complex setup process.
+
+
+
+Thinking about how users will include the project still.
+
+
+
+ok, for now we'll just assume they will include the source code in their project from the github repo I made. I will use Cmake to build the project. Next let's design how the api will be instantiated
+ChatGPT
+Given that you're using CMake and GitHub for distributing your source code, the next step is to design how the API will be instantiated.
+When designing the API instantiation, you should focus on ease of use and intuitive handling. It is generally a good idea to encapsulate everything inside a main "Engine" or "Renderer" class, which can act as the entry point of your API.
+Here's a simple design suggestion:
+cpp
+Copy code
+namespace MyGraphicsEngine
+{
+    class Renderer
+    {
+    public:
+        Renderer();
+        ~Renderer();
+
+        bool Initialize(int windowWidth, int windowHeight, void* windowHandle);
+        void Shutdown();
+
+        void BeginFrame();
+        void EndFrame();
+
+        // Other functionalities like drawing triangles, mesh management, etc.
+    };
+}
+Here are the descriptions for these functions:
+Constructor and Destructor: The constructor (Renderer()) and destructor (~Renderer()) manage resource allocation and deallocation for the Renderer class. It's good practice to keep these light and move any significant initialization or cleanup to Initialize() and Shutdown() methods.
+Initialize(): This function takes the window's dimensions and handle as parameters and initializes all necessary components for the renderer to work. For instance, it might create a Vulkan/DirectX/OpenGL context, compile shaders, etc.
+Shutdown(): This function cleans up and deallocates resources used by the renderer. It's important to ensure that all resources are properly released to prevent memory leaks.
+BeginFrame() and EndFrame(): These functions handle the necessary tasks at the start and end of each frame. This could include clearing the screen, swapping buffers, handling frame timing, etc.
+This is a basic suggestion. Depending on the complexity of your engine, you may need more initialization parameters or more sophisticated resource management. It's also crucial to design with error handling in mind. For example, your Initialize() function might return a bool to indicate whether initialization was successful, and you might also provide a way to get detailed error information if something goes wrong.
+Remember, a good API design emphasizes abstraction and hides complexities from the users, providing them with an interface that's as simple and intuitive as possible.
+
+
+
+great, let's prefix everything with CNF for CalmNiceFramework and start adding some more functionality like drawing a triangle
+ChatGPT
+Certainly, I will prefix everything with CNF as per your request. Here's an example of how you can structure the basic Renderer class and provide a method to draw a triangle.
+cpp
+Copy code
+namespace CNF
+{
+    struct Vertex {
+        // Position
+        float x, y, z;
+
+        // Color
+        float r, g, b;
+    };
+
+    class Triangle {
+    public:
+        Triangle(Vertex v1, Vertex v2, Vertex v3);
+
+        const Vertex* GetVertices() const { return vertices; }
+        // Other triangle-specific methods...
+
+    private:
+        Vertex vertices[3];
+    };
+
+    class Renderer
+    {
+    public:
+        Renderer();
+        ~Renderer();
+
+        bool Initialize(int windowWidth, int windowHeight, void* windowHandle);
+        void Shutdown();
+
+        void BeginFrame();
+        void EndFrame();
+
+        void DrawTriangle(const Triangle& triangle);
+        // Other methods...
+
+    private:
+        // Renderer's private attributes and methods...
+    };
+}
+Here, Vertex is a simple struct that holds the position and color of a vertex. Triangle is a class that contains three Vertex objects, which define the triangle. Note that Triangle provides a GetVertices() method to access the vertex data, which the Renderer can use when drawing the triangle.
+The Renderer class has a DrawTriangle() method that takes a Triangle object and renders it to the screen. You'll need to implement this function to use the appropriate lower-level graphics API commands.
+Remember, this is a very basic example. In a full-featured graphics engine, there would be many more complexities to consider. For example, you might need to handle uploading the triangle data to the GPU, applying transformations to the triangle, setting up shaders and textures, dealing with depth testing, and so on. It's also important to note that drawing individual triangles is not very efficient. In a real engine, you'd generally want to batch draw calls together and use a more efficient representation for your 3D models, such as a mesh composed of many triangles.
+
+
+now let's write some basic tests for what we have so far
+
+ChatGPT
+Sure, let's set up some basic unit tests. For C++, Google's testing framework, Google Test, is widely used and it's a good choice for this purpose. If you haven't already included Google Test in your project, you can find it on GitHub and include it just like you would any other library.
+Here's an example of how you might set up some tests for the basic functionality:
+cpp
+Copy code
+#include "gtest/gtest.h"
+#include "renderer.h"
+TEST(RendererTest, Initialization) {
+    CNF::Renderer renderer;
+
+    // We'll use a hypothetical window width, height and handle for the test.
+    // In a real test, you'd need to create an actual window and get its handle.
+    int windowWidth = 800;
+    int windowHeight = 600;
+    void* windowHandle = nullptr;
+
+    ASSERT_TRUE(renderer.Initialize(windowWidth, windowHeight, windowHandle));
+
+    // Add more checks here if necessary. For example, you could check that
+    // the renderer's internal state has been correctly initialized.
+    
+    // Clean up.
+    renderer.Shutdown();
+}
+
+TEST(RendererTest, DrawTriangle) {
+    CNF::Renderer renderer;
+    int windowWidth = 800;
+    int windowHeight = 600;
+    void* windowHandle = nullptr;
+
+    ASSERT_TRUE(renderer.Initialize(windowWidth, windowHeight, windowHandle));
+
+    CNF::Vertex v1 = { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f };
+    CNF::Vertex v2 = { 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f };
+    CNF::Vertex v3 = { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+
+    CNF::Triangle triangle(v1, v2, v3);
+
+    renderer.BeginFrame();
+
+    // This is a bit tricky to test, since we don't have an easy way to verify
+    // visually that the triangle was drawn correctly. One possibility is to 
+    // create a mock version of the lower-level graphics API you're using, which
+    // checks that the correct commands are sent when DrawTriangle() is called.
+    renderer.DrawTriangle(triangle);
+
+    renderer.EndFrame();
+
+    // Clean up.
+    renderer.Shutdown();
+}
+These tests initialize a CNF::Renderer object, and in the second test, create a CNF::Triangle object and attempt to draw it.
+Please note that this is a very simplistic test. In a real test environment, you'd need to set up an actual window context and ensure that the renderer is correctly interacting with the underlying graphics API.
+Also, the DrawTriangle() method is difficult to test in a unit test, as its result is a visual output. You might want to structure your code in a way that's more amenable to unit testing. For example, you could abstract away the actual graphics API calls into a separate layer, and then create a mock version of that layer for testing, which simply checks that the correct commands are sent.
+
+
+Ok, not sure I want to use Google Test but maybe it is a good idea.
+
+
+
+what are the advantages of using google test and are there any alternatives that might be better
+
+ChatGPT
+Google Test is a popular testing framework for C++ and is widely used in both industry and academia. Here are some of the key advantages:
+
+Flexibility: Google Test supports a wide variety of tests, including simple unit tests, death tests, value-parameterized tests, type-parameterized tests, and even tests for exception handling.
+
+Detailed Diagnostic Information: When a test fails, Google Test provides detailed diagnostic information, including the specific line number and the values of variables that led to the test failure.
+
+Custom Failure Messages: Google Test supports custom failure messages, which can make it easier to understand why a test has failed.
+
+Test Discovery: Google Test automatically discovers tests. You just need to write the tests in your source files and Google Test takes care of finding them and running them.
+
+Setup and Teardown Support: Google Test provides setup (SetUp()) and teardown (TearDown()) routines that can be overridden in test case classes to perform common setup and cleanup tasks.
+
+Mocking Support: When used in conjunction with Google Mock, Google Test provides powerful mocking capabilities.
+
+However, there are several alternatives to Google Test, and the best one to use can depend on your specific needs:
+
+Catch2: This is a modern, C++-native, header-only, test framework for unit-tests, TDD and BDD. It is easy to use and its assertions read like English sentences.
+
+Boost.Test: Part of the extensive Boost set of libraries, Boost.Test is a robust and stable testing library, but it might be a bit heavyweight if you're just interested in testing and not the other Boost libraries.
+
+CppUTest: This is a lightweight framework for C++ unit testing and includes support for C. It's intended to be simple to use for small to medium-sized projects.
+
+doctest: This is a lightweight C++ testing framework that claims to be the lightest feature-rich C++ single-header testing framework for unit tests and TDD. It is inspired by Catch2 and Google Test.
+
+Each of these testing frameworks has its strengths and weaknesses, and the best choice depends on your specific needs and preferences. You might want to consider factors like the size and complexity of your project, the importance of integration with other tools or libraries, the complexity of the tests you'll be writing, and personal preference for the framework's style and syntax.
+
+
+
+
+
+User
+let's use whichever is easiest to get started with
+ChatGPT
+If you're looking for simplicity and quick setup, Catch2 or doctest could be a good choice. They are both header-only libraries, which means you don't need to compile them separately, you just include the header file in your project and start writing tests.
+Here's an example of how you could use Catch2 to write some tests for your code. Note that the general structure of the tests is similar to the Google Test example I provided earlier.
+First, you would include the Catch2 header and define the CATCH_CONFIG_MAIN macro in one cpp file:
+cpp
+Copy code
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+Then you could write your tests in another cpp file:
+cpp
+Copy code
+#include "catch.hpp"
+#include "renderer.h"
+
+TEST_CASE("Renderer Initialization", "[renderer]") {
+    CNF::Renderer renderer;
+
+    int windowWidth = 800;
+    int windowHeight = 600;
+    void* windowHandle = nullptr;
+
+    REQUIRE(renderer.Initialize(windowWidth, windowHeight, windowHandle));
+
+    renderer.Shutdown();
+}
+
+TEST_CASE("Draw Triangle", "[renderer]") {
+    CNF::Renderer renderer;
+    int windowWidth = 800;
+    int windowHeight = 600;
+    void* windowHandle = nullptr;
+
+    REQUIRE(renderer.Initialize(windowWidth, windowHeight, windowHandle));
+
+    CNF::Vertex v1 = { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f };
+    CNF::Vertex v2 = { 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f };
+    CNF::Vertex v3 = { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+
+    CNF::Triangle triangle(v1, v2, v3);
+
+    renderer.BeginFrame();
+
+    // As in the Google Test example, this is hard to test in a unit test.
+    renderer.DrawTriangle(triangle);
+
+    renderer.EndFrame();
+
+    renderer.Shutdown();
+}
+You'll notice the syntax for writing tests is somewhat different in Catch2. You use TEST_CASE to define a test, and REQUIRE to assert that a condition is true. If the condition is false, the test will fail and the current test case will stop.
+While Catch2 and doctest are both great choices for quick and easy testing setup, the right choice will depend on your specific needs and preferences. I would recommend trying out both and seeing which one you prefer. They both have good documentation that you can refer to for more advanced features and usage examples.
+
+
+
+ok now let's write a cmakelists.txt for this project
+
+ChatGPT
+Sure, let's create a simple CMakeLists.txt for your project. I'll assume the following project structure:
+
+swift
+Copy code
+/your_project
+├── CMakeLists.txt
+├── include
+│   └── CNF
+│       ├── renderer.h
+│       └── triangle.h
+├── src
+│   ├── renderer.cpp
+│   └── triangle.cpp
+└── tests
+    ├── catch.hpp
+    └── renderer_tests.cpp
+Here's a simple CMakeLists.txt that would build your project with this structure:
+
+cmake
+Copy code
+cmake_minimum_required(VERSION 3.10)
+
+project(CNF VERSION 1.0)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# For better debug info in debug builds.
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+
+# Put all binary files into a "bin" directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Add an executable for the main program
+add_executable(CNF 
+    src/renderer.cpp 
+    src/triangle.cpp)
+
+target_include_directories(CNF 
+    PRIVATE 
+        ${PROJECT_SOURCE_DIR}/include)
+
+# Add an executable for the tests
+add_executable(CNFTests 
+    tests/renderer_tests.cpp)
+
+target_include_directories(CNFTests 
+    PRIVATE 
+        ${PROJECT_SOURCE_DIR}/include 
+        ${PROJECT_SOURCE_DIR}/tests)
+
+target_link_libraries(CNFTests PRIVATE CNF)
+This CMakeLists.txt specifies a minimum CMake version, sets the project name and version, sets the C++ standard to C++17, adds some debug flags for debug builds, and sets the binary output directory to "bin".
+
+It then defines two executables, one for the main program and one for the tests. For each executable, it adds the appropriate source files, specifies the include directories where the compiler should look for header files, and for the test executable, it links against the main program's executable.
+
+You can generate a build system by running cmake .. from a "build" directory in your project root, and then compile your project with make or whatever build tool your generated build system uses.
+
+Please note, this is a very basic CMakeLists.txt file and doesn't take into account many things you might want to do in a more complex project. For example, it doesn't handle installing your program, it doesn't set compiler warnings, it doesn't have any options for enabling or disabling parts of the build, it doesn't handle dependencies on any third-party libraries you might be using, and it doesn't provide separate build types for debug and release builds. It also doesn't use CMake's find_package() or add_subdirectory() commands to handle dependencies. You may want to consider these and other factors as you continue to develop your project.
+
+
+
+Ok, let's actually make all these files and see what we can actually start to get working next. Probably need to write the dx12 stuff.
+
+
+
+
+ok, let's work on renderer.cpp and how we can start making a dx12 implementation
+ChatGPT
+DirectX 12 (DX12) is a lower-level graphics API from Microsoft. As such, implementing a basic renderer with DX12 can be quite complex, but I can give you a high-level overview of the steps involved in initializing DX12 and rendering a triangle.
+First, we need to include the necessary DirectX headers at the top of the renderer.cpp file:
+cpp
+Copy code
+#include "renderer.h"
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#include <D3Dcompiler.h>
+Now, I'll provide an overview of the steps to create a basic DX12 renderer:
+Device Creation: You will need to create a ID3D12Device object. This represents the graphics device (i.e., the GPU) and is used to create other DX12 objects.
+Command Queue Creation: DX12 uses a command queue system where you submit commands to the GPU. You will need to create a ID3D12CommandQueue object.
+Swap Chain Creation: The swap chain is responsible for presenting the rendered image to the screen. You will create a swap chain using the IDXGISwapChain3 interface.
+Descriptor Heap Creation: DX12 uses descriptor heaps to manage resources like render targets. You'll need to create a ID3D12DescriptorHeap object for your render targets.
+Render Targets Creation: You'll need to create a render target for each frame that you'll be rendering.
+Command Allocators and Command List Creation: You'll need a ID3D12CommandAllocator and a ID3D12GraphicsCommandList for each frame.
+Fence and Event Creation: These are used for synchronization between the CPU and the GPU.
+Root Signature and Pipeline State Creation: The root signature defines what resources the GPU will be using during rendering, and the pipeline state object (PSO) defines the rendering pipeline.
+Vertex Buffer Creation: You'll need to create a vertex buffer to store the vertices of your triangle. This buffer will be created on the GPU, and you'll need to copy the vertex data from CPU memory to GPU memory.
+Viewports and Scissor Rects Setup: These define the region of the screen to render to.
+The rendering process itself consists of recording commands into a command list, closing the command list, executing the command list, and then presenting the rendered frame.
+Please note that this is a simplified overview of DX12 initialization and rendering. DX12 is a complex API and requires a good understanding of modern graphics hardware. Additionally, error handling has been omitted for brevity.
+For more detailed information, including example code, I recommend checking out the DirectX 12 documentation and samples provided by Microsoft. Additionally, the book "Introduction to 3D Game Programming with DirectX 12" by Frank D. Luna provides a comprehensive introduction to DirectX 12.
+
+
+
+can we update the cmakelists to include dx12
+
+ChatGPT
+The DirectX 12 library comes with the Windows SDK, which is usually installed along with Visual Studio. Therefore, it's typically available on most Windows development environments.
+Since DirectX 12 is a part of the Windows SDK, it's not necessary to directly link against it in the CMakeLists.txt. Instead, you link against d3d12.lib and dxgi.lib which are part of the Windows SDK.
+
+Here's a simple way to add it to your CMakeLists.txt:
+
+cmake
+Copy code
+cmake_minimum_required(VERSION 3.10)
+
+project(CNF VERSION 1.0)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# For better debug info in debug builds.
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+
+# Put all binary files into a "bin" directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Add an executable for the main program
+add_executable(CNF 
+    src/renderer.cpp 
+    src/triangle.cpp)
+
+target_include_directories(CNF 
+    PRIVATE 
+        ${PROJECT_SOURCE_DIR}/include)
+
+# Link against the DirectX 12 libraries
+target_link_libraries(CNF d3d12 dxgi)
+
+# Add an executable for the tests
+add_executable(CNFTests 
+    tests/renderer_tests.cpp)
+
+target_include_directories(CNFTests 
+    PRIVATE 
+        ${PROJECT_SOURCE_DIR}/include 
+        ${PROJECT_SOURCE_DIR}/tests)
+
+target_link_libraries(CNFTests PRIVATE CNF)
+This CMakeLists.txt links your main project executable against d3d12.lib and dxgi.lib.
+Please note that as DirectX 12 is a Windows-only technology, this project will only be buildable on Windows platforms.
+
+
+
+lets write the device creation now
+
+ChatGPT
+Sure, let's define a basic DX12 device initialization in the renderer.cpp file.
+
+We'll add some new private member variables to the Renderer class first, in renderer.h:
+
+cpp
+Copy code
+namespace CNF {
+    class Renderer {
+        ...
+    private:
+        ID3D12Device* device;
+        ID3D12CommandQueue* commandQueue;
+    };
+}
+Then we'll write the device creation code in the Initialize method of Renderer in renderer.cpp:
+
+cpp
+Copy code
+#include "renderer.h"
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#include <D3Dcompiler.h>
+
+namespace CNF {
+    bool Renderer::Initialize(int windowWidth, int windowHeight, void* windowHandle)
+    {
+        HRESULT hr;
+
+        // -- Create the Device -- //
+
+        IDXGIFactory4* dxgiFactory;
+        hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+        if (FAILED(hr))
+        {
+            // Error handling here
+            return false;
+        }
+
+        IDXGIAdapter1* adapter;
+
+        // Loop through adapters until we find a DX12 compatible one
+        for (UINT i = 0; dxgiFactory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i)
+        {
+            DXGI_ADAPTER_DESC1 desc;
+            adapter->GetDesc1(&desc);
+
+            if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+            {
+                // We don't want a software device
+                continue;
+            }
+
+            // Check for DX12 support
+            if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
+            {
+                break;
+            }
+        }
+
+        hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+        if (FAILED(hr))
+        {
+            // Error handling here
+            return false;
+        }
+
+        // -- Create the Command Queue -- //
+
+        D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+        queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+        queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        hr = device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
+        if (FAILED(hr))
+        {
+            // Error handling here
+            return false;
+        }
+
+        // TODO: Remaining initialization code...
+
+        return true;
+    }
+    ...
+}
+This code first creates a DXGI factory, which is used to enumerate the system's graphics adapters. It then loops through the adapters until it finds a DirectX 12 compatible one. With this adapter, it creates a DirectX 12 device.
+
+Then it creates a command queue. The command queue is used to queue up commands to be executed by the GPU. In this case, we're creating a direct command queue, which means we can directly queue up graphics and compute commands.
+
+Please note that proper error handling is crucial for robustness, but I've omitted most of it for brevity. You should always check the return values of the DirectX functions and handle any errors appropriately.
+
+The HRESULT is a special Windows type used to represent error codes. The FAILED macro checks if an HRESULT represents an error, and the SUCCEEDED macro checks if it represents success. You can use the DXGetErrorString function to get a string that describes the error represented by an HRESULT.
+
+This code also uses the IID_PPV_ARGS macro. This is a helper macro that makes it easier to pass the correct arguments to functions that take a GUID
