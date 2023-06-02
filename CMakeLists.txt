@@ -15,12 +15,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_executable(CNF 
     tests/simpleMain.cpp
     src/renderer.cpp
+    src/dx12_renderer.cpp
     # src/triangle.cpp
 )
 
-target_include_directories(CNF 
-    PRIVATE 
-        ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(CNF PRIVATE 
+    include/CNF
+)
 
 # Link against the DirectX 12 libraries
 target_link_libraries(CNF d3d12 dxgi)

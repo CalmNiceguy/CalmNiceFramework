@@ -1,11 +1,8 @@
-#include "renderer.h"
-#include <d3d12.h>
-#include <dxgi1_4.h>
-#include <D3Dcompiler.h>
+#include "dx12_renderer.h"
 
 namespace CNF {
 
-    bool DX12Renderer::Renderer::Initialize(int windowWidth, int windowHeight, void* windowHandle)
+    bool DX12Renderer::Initialize(int windowWidth, int windowHeight, void* windowHandle)
     {
         HRESULT hr;
 
@@ -64,14 +61,4 @@ namespace CNF {
         return true;
     }
 
-    std::unique_ptr<Renderer> CreateRenderer(RendererType type) {
-        switch (type) {
-            case RendererType::DX12:
-                return std::make_unique<DX12Renderer>();
-            case RendererType::Vulkan:
-                return std::make_unique<VulkanRenderer>();
-            default:
-                return nullptr;
-        }
-    }
 }

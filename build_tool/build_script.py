@@ -238,7 +238,7 @@ def deploy():
     redirect_output(deployStdOut, deployStdErr)
     configStr = configShorthands[buildConfig]
 
-    exePath = outputFolder + '/' + configStr + '/' + outputFilename
+    exePath = outputFolder + '/bin/' + configStr + '/' + outputFilename
     exePath = os.path.realpath(exePath).replace(os.sep, '/')
     
     os.makedirs(setup.deployLocation + '/' + buildConfig, exist_ok=True)
@@ -272,13 +272,11 @@ def run():
     redirect_output(runStdOut, runStdErr)
     configStr = configShorthands[buildConfig]
 
-    exePath = outputFolder + '/' + configStr + '/' + outputFilename
+    exePath = outputFolder + '/bin/' + configStr + '/' + outputFilename
     exePath = os.path.realpath(exePath).replace(os.sep, '/')
     
     os.makedirs(setup.deployLocation + '/' + buildConfig, exist_ok=True)
     
-    exePath = outputFolder + '/' + configStr + '/' + outputFilename
-    exePath = os.path.realpath(exePath).replace(os.sep, '/')
     if os.path.isfile(exePath) :
         subprocess.call([
             exePath

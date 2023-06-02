@@ -539,3 +539,346 @@ Please note that proper error handling is crucial for robustness, but I've omitt
 The HRESULT is a special Windows type used to represent error codes. The FAILED macro checks if an HRESULT represents an error, and the SUCCEEDED macro checks if it represents success. You can use the DXGetErrorString function to get a string that describes the error represented by an HRESULT.
 
 This code also uses the IID_PPV_ARGS macro. This is a helper macro that makes it easier to pass the correct arguments to functions that take a GUID
+
+
+what's the best way to write renderer.h independently of dx12 and vulkan
+
+ChatGPT
+One of the common methods to create an API-independent architecture is to use an Abstract Factory design pattern. You would first define an abstract base class for your Renderer and then provide concrete implementations for each API you want to support, such as DX12 and Vulkan.
+
+Here is an example of how you might define these in renderer.h:
+
+cpp
+Copy code
+namespace CNF {
+
+    // This is the abstract base class
+    class Renderer {
+    public:
+        virtual ~Renderer() = default;
+
+        virtual bool Initialize(int windowWidth, int windowHeight, void* windowHandle) = 0;
+        virtual void ClearScreen(float r, float g, float b, float a) = 0;
+        virtual void DrawTriangle(const Triangle& triangle) = 0;
+        virtual void Present() = 0;
+    };
+
+    // Factory function to create a Renderer
+    std::unique_ptr<Renderer> CreateRenderer(RendererType type);
+}
+In this code, Renderer is an abstract base class that defines the interface for a renderer. The CreateRenderer function is a factory function that creates a renderer of the specified type. RendererType is an enum that you would define to list the types of renderers that can be created.
+
+In renderer.cpp, or potentially in separate dx12_renderer.cpp and vulkan_renderer.cpp files, you would define the concrete implementations of this interface for each API:
+
+cpp
+Copy code
+namespace CNF {
+
+    class DX12Renderer : public Renderer {
+        // DX12 implementation of Renderer
+    };
+
+    class VulkanRenderer : public Renderer {
+        // Vulkan implementation of Renderer
+    };
+
+    std::unique_ptr<Renderer> CreateRenderer(RendererType type) {
+        switch (type) {
+            case RendererType::DX12:
+                return std::make_unique<DX12Renderer>();
+            case RendererType::Vulkan:
+                return std::make_unique<VulkanRenderer>();
+            default:
+                return nullptr;
+        }
+    }
+}
+Each concrete Renderer class like DX12Renderer or VulkanRenderer would implement the virtual methods defined in the Renderer base class. Note that this requires separating the API-specific code into different classes.
+
+Then in the client code, you can create a Renderer without caring about which API it uses:
+
+cpp
+Copy code
+auto renderer = CNF::CreateRenderer(CNF::RendererType::DX12);
+This way, the header file doesn't need to include any API-specific code, and the implementation of the API-specific Renderers can be completely hidden from the client code. This is also beneficial for the future extension of the framework, as adding support for a new API doesn't require modifying existing client code.
+
+
+
+
+
+User
+where is rendererType defined
+ChatGPT
+The RendererType is an enum that you would need to define in order to specify which types of Renderers can be created. It would go in the renderer.h file:
+
+cpp
+Copy code
+namespace CNF {
+
+    enum class RendererType {
+        DX12,
+        Vulkan,
+        // Other types as needed...
+    };
+
+    // This is the abstract base class
+    class Renderer {
+        // As previously defined...
+    };
+
+    // Factory function to create a Renderer
+    std::unique_ptr<Renderer> CreateRenderer(RendererType type);
+}
+In this code, RendererType is an enum class (also known as a "scoped enumeration"), which is a type of enumeration where the enumerators are scoped to the enum. There are two enumerators, DX12 and Vulkan, representing the two types of Renderers that can be created. If you were to add support for another graphics API in the future, you could simply add another enumerator to this enum class.
+
+
+lets make a very simple test in plain c++ without any test framework yet that just creates a dx12 renderer and initializes it
+ChatGPT
+Sure, here's an example of a simple test in plain C++. This test will simply create a DX12 renderer and initialize it. This is not using any testing framework, so the output is simply printed to the console.
+
+First, include the necessary headers at the top of the main.cpp file:
+
+cpp
+Copy code
+#include "renderer.h"
+#include <iostream>
+Then, you can write the test like this:
+
+cpp
+Copy code
+int main() {
+    // Create a DX12 renderer
+    std::unique_ptr<CNF::Renderer> renderer = CNF::CreateRenderer(CNF::RendererType::DX12);
+
+    // Initialize the renderer
+    bool success = renderer->Initialize(800, 600, nullptr);
+
+    // Check the result
+    if (success) {
+        std::cout << "Renderer initialized successfully.\n";
+    } else {
+        std::cout << "Renderer failed to initialize.\n";
+    }
+
+    return 0;
+}
+This simple program creates a DX12 renderer and then initializes it with a window size of 800x600. It doesn't attach the renderer to any window, so it passes nullptr for the window handle.
+
+Then it checks whether the initialization succeeded or not. If it succeeded, it prints "Renderer initialized successfully." to the console. If it failed, it prints "Renderer failed to initialize.".
+
+You can compile and run this program to test whether your renderer initialization is working correctly. Please note that you should have appropriate error handling and clean-up code in place in your Renderer implementation. Also, in order to execute this on a real window, you would need to pass a valid window handle to the Initialize function.
+
+
+
+
+
+User
+Im getting this error:
+simpleMain.obj : error LNK2019: unresolved external symbol "class std::unique_ptr<class CNF::Renderer,struct std::defau
+lt_delete<class CNF::Renderer> > __cdecl CNF::CreateRenderer(enum CNF::RendererType)" (?CreateRenderer@CNF@@YA?AV?$uniq
+ue_ptr@VRenderer@CNF@@U?$default_delete@VRenderer@CNF@@@std@@@std@@W4RendererType@1@@Z) referenced in function main [C:
+\Users\Max\Documents\GitHub\CalmNiceFramework\build\vs_dbg\CNF.vcxproj]
+C:\Users\Max\Documents\GitHub\CalmNiceFramework\build\vs_dbg\bin\Debug\CNF.exe : fatal error LNK1120: 1 unresolved exte
+rnals [C:\Users\Max\Documents\GitHub\CalmNiceFramework\build\vs_dbg\CNF.vcxproj]
+ChatGPT
+This is a linker error, which means the compiler is not able to find the definition of the CNF::CreateRenderer function that you've declared in your header file.
+
+Remember that in C++, when you declare a function in a header file, you must also provide a definition for it in a source (.cpp) file. If the compiler finds a declaration but no matching definition, you will get an "unresolved external symbol" error.
+
+It seems like you have declared std::unique_ptr<CNF::Renderer> CreateRenderer(RendererType type); in your header file, but you might not have defined it in your renderer.cpp (or whichever .cpp file you're using for this purpose) file.
+
+Please make sure you have included the definition for the CreateRenderer function in one of your .cpp files. It should look something like this:
+
+cpp
+Copy code
+namespace CNF {
+
+    class DX12Renderer : public Renderer {
+        // DX12 implementation of Renderer
+    };
+
+    class VulkanRenderer : public Renderer {
+        // Vulkan implementation of Renderer
+    };
+
+    std::unique_ptr<Renderer> CreateRenderer(RendererType type) {
+        switch (type) {
+            case RendererType::DX12:
+                return std::make_unique<DX12Renderer>();
+            case RendererType::Vulkan:
+                return std::make_unique<VulkanRenderer>();
+            default:
+                return nullptr;
+        }
+    }
+}
+Ensure this definition is correctly implemented and that this .cpp file is included in the build process.
+
+Also, remember that in this case, DX12Renderer and VulkanRenderer should be properly defined and implemented classes derived from the Renderer base class, with overrides for all the pure virtual functions.
+
+
+
+
+
+User
+ok, fixed that, now a new error:
+C:\Users\Max\Documents\GitHub\CalmNiceFramework\src\dx12_renderer.cpp(8,34): error C2509: 'Initialize': member function
+ not declared in 'CNF::DX12Renderer' [C:\Users\Max\Documents\GitHub\CalmNiceFramework\build\vs_dbg\CNF.vcxproj]
+ChatGPT
+This error message is indicating that you've attempted to define the Initialize function for the DX12Renderer class, but it was not declared in the class definition.
+
+In order to resolve this issue, make sure that the Initialize function is declared in the DX12Renderer class definition and its signature matches with the definition.
+
+Here is an example of how the DX12Renderer class should be declared:
+
+cpp
+Copy code
+namespace CNF {
+
+    class DX12Renderer : public Renderer {
+    public:
+        DX12Renderer();
+        virtual ~DX12Renderer();
+        
+        bool Initialize(int windowWidth, int windowHeight, void* windowHandle) override;
+        void ClearScreen(float r, float g, float b, float a) override;
+        void DrawTriangle(const Triangle& triangle) override;
+        void Present() override;
+
+        // More members and functions as needed...
+    };
+
+    // Other code...
+}
+This declares the DX12Renderer class as a subclass of Renderer and declares Initialize, ClearScreen, DrawTriangle, and Present functions that override the virtual functions declared in Renderer.
+
+Once you have declared these functions in the class definition, you should be able to define them in dx12_renderer.cpp without getting an error. For example:
+
+cpp
+Copy code
+namespace CNF {
+
+    DX12Renderer::DX12Renderer() {
+        // Constructor code...
+    }
+
+    DX12Renderer::~DX12Renderer() {
+        // Destructor code...
+    }
+
+    bool DX12Renderer::Initialize(int windowWidth, int windowHeight, void* windowHandle) {
+        // Initialization code...
+        return true;
+    }
+
+    void DX12Renderer::ClearScreen(float r, float g, float b, float a) {
+        // ClearScreen code...
+    }
+
+    void DX12Renderer::DrawTriangle(const Triangle& triangle) {
+        // DrawTriangle code...
+    }
+
+    void DX12Renderer::Present() {
+        // Present code...
+    }
+
+    // Other code...
+}
+Make sure the function signatures in the definitions exactly match the ones in the declarations, including the return type, name, parameters, and const/override specifiers, if any.
+
+In this case, the Initialize function should have a return type of bool and should take three parameters: an int for the window width, an int for the window height, and a void* for the window handle. And since Initialize is declared as virtual in the base class Renderer, you should use the override keyword in the DX12Renderer class to indicate that you're overriding a virtual function.
+
+
+
+
+
+User
+what is the purpose of #pragma once
+ChatGPT
+The #pragma once directive is a preprocessor directive in C++ that ensures a header file is only included once in a compilation unit.
+
+When a C++ source file includes a header file, the preprocessor essentially copies the contents of the header file into the source file. If a header file is included more than once in a source file (either directly or indirectly through other header files), it can cause problems. For example, if a class is defined in a header file, and that header file is included twice, the class will be defined twice, which is a violation of the C++ One Definition Rule and will cause a compilation error.
+
+The #pragma once directive tells the preprocessor that if a file has already been included, it should not be included again. It's typically used at the beginning of a header file:
+
+cpp
+Copy code
+#pragma once
+
+// Rest of header file...
+This has the same effect as include guards, which is another common technique to prevent multiple inclusion:
+
+cpp
+Copy code
+#ifndef MY_HEADER_H
+#define MY_HEADER_H
+
+// Rest of header file...
+
+#endif
+The main advantage of #pragma once over include guards is that it's shorter and less prone to errors (like forgetting to close the #ifndef with a #endif, or having a typo in the guard macro name).
+
+However, #pragma once is not part of the C++ standard (as of my knowledge cutoff in 2021), although it is supported by most modern compilers. If you need to ensure your code is strictly portable across all compilers, it might be safer to use include guards instead. However, for most practical purposes, #pragma once is widely accepted and used.
+
+
+
+
+
+User
+error for this code:
+
+#include "renderer.h"
+#include <memory>
+
+namespace CNF {
+
+    std::unique_ptr<Renderer> CreateRenderer(RendererType type) {
+        switch (type) {
+            case RendererType::DX12:
+                return std::make_unique<DX12Renderer>();
+            case RendererType::Vulkan:
+                return std::make_unique<VulkanRenderer>();
+            default:
+                return nullptr;
+        }
+    }
+
+}
+
+C:\Users\Max\Documents\GitHub\CalmNiceFramework\src\renderer.cpp(9,17): error C2440: 'return': cannot convert from 'std
+::unique_ptr<CNF::DX12Renderer,std::default_delete<CNF::DX12Renderer>>' to 'std::unique_ptr<CNF::Renderer,std::default_
+delete<CNF::Renderer>>' [C:\Users\Max\Documents\GitHub\CalmNiceFramework\build\vs_dbg\CNF.vcxproj]
+ChatGPT
+The error you're seeing occurs because the std::unique_ptr type that is returned by the std::make_unique<DX12Renderer>() and std::make_unique<VulkanRenderer>() calls does not match the return type declared by the CreateRenderer function.
+
+You've declared CreateRenderer to return std::unique_ptr<Renderer>, but std::make_unique<DX12Renderer>() returns std::unique_ptr<DX12Renderer>, and std::make_unique<VulkanRenderer>() returns std::unique_ptr<VulkanRenderer>. Even though DX12Renderer and VulkanRenderer are derived from Renderer, std::unique_ptr<DX12Renderer> is not implicitly convertible to std::unique_ptr<Renderer>.
+
+This is because std::unique_ptr is a template class, and a std::unique_ptr<Derived> is a completely different type from a std::unique_ptr<Base>, even if Derived is derived from Base. This is a fundamental aspect of C++ template classes.
+
+You can fix this error by casting the unique pointers to the base class type, like this:
+
+cpp
+Copy code
+#include "renderer.h"
+#include <memory>
+
+namespace CNF {
+
+    std::unique_ptr<Renderer> CreateRenderer(RendererType type) {
+        switch (type) {
+            case RendererType::DX12:
+                return std::unique_ptr<Renderer>(new DX12Renderer());
+            case RendererType::Vulkan:
+                return std::unique_ptr<Renderer>(new VulkanRenderer());
+            default:
+                return nullptr;
+        }
+    }
+
+}
+In this version of the function, I'm using the new operator to create a new DX12Renderer or VulkanRenderer, and then I'm using the std::unique_ptr<Renderer> constructor to create a unique pointer to a Renderer that owns the newly created object.
+
+Note that this version of the code assumes that the DX12Renderer and VulkanRenderer classes have public, parameterless constructors. If those constructors are not public or require parameters, you will need to adjust the new DX12Renderer() and new VulkanRenderer() expressions accordingly.
+
+
